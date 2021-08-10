@@ -5,11 +5,11 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.hypherionmc.modexporter.utils.HastebinAPI;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.command.arguments.MessageArgument;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.MessageArgument;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraftforge.fml.ModList;
 import org.apache.commons.io.FileUtils;
 
@@ -18,17 +18,17 @@ import java.nio.charset.StandardCharsets;
 
 public class ModListExportCommand {
 
-    public static void register(CommandDispatcher<CommandSource> dispatcher) {
-        LiteralArgumentBuilder<CommandSource> modlistExportCommand =
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        LiteralArgumentBuilder<CommandSourceStack> modlistExportCommand =
                 Commands.literal("modlist")
-                .requires((commandSource -> commandSource.hasPermissionLevel(4)))
+                .requires((commandSource -> commandSource.hasPermission(4)))
                 .then(Commands.argument("type", MessageArgument.message()).executes(ModListExportCommand::exportModlist));
 
         dispatcher.register(modlistExportCommand);
     }
 
-    private static int exportModlist(CommandContext<CommandSource> context) throws CommandSyntaxException {
-        ITextComponent type = MessageArgument.getMessage(context, "type");
+    private static int exportModlist(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        Component type = MessageArgument.getMessage(context, "type");
         String typeString = type.getString();
 
         if (typeString.equalsIgnoreCase("file")) {
@@ -48,11 +48,11 @@ public class ModListExportCommand {
 
             try {
                 FileUtils.writeStringToFile(new File("modlist-export.html"), builder.toString(), StandardCharsets.UTF_8);
-                context.getSource().sendFeedback(new TranslationTextComponent("commands.modlist.exported"), true);
+                context.getSource().sendSuccess(new TranslatableComponent("commands.modlist.exported"), true);
                 return 1;
             } catch (Exception e) {
                 e.printStackTrace();
-                context.getSource().sendErrorMessage(new TranslationTextComponent("commands.modlist.failed"));
+                context.getSource().sendFailure(new TranslatableComponent("commands.modlist.failed"));
             }
 
         } else if (typeString.equalsIgnoreCase("paste")) {
@@ -69,13 +69,13 @@ public class ModListExportCommand {
 
             String pasteUrl = HastebinAPI.addToPaste(builder.toString());
             if (pasteUrl.isEmpty()) {
-                context.getSource().sendErrorMessage(new TranslationTextComponent("commands.modlist.pastefail"));
+                context.getSource().sendFailure(new TranslatableComponent("commands.modlist.pastefail"));
             } else {
-                String pasteTranslated = new TranslationTextComponent("commands.modlist.pasted").getString().replace("${url}", pasteUrl);
-                context.getSource().sendFeedback(new TranslationTextComponent(pasteTranslated), true);
+                String pasteTranslated = new TranslatableComponent("commands.modlist.pasted").getString().replace("${url}", pasteUrl);
+                context.getSource().sendSuccess(new TranslatableComponent(pasteTranslated), true);
             }
         } else {
-            context.getSource().sendFeedback(new TranslationTextComponent("commands.modlist.usage"), false);
+            context.getSource().sendSuccess(new TranslatableComponent("commands.modlist.usage"), false);
         }
         return 1;
 
