@@ -1,0 +1,8 @@
+{
+  "commands.modlist.usage": "Usage: /modlist file or /modlist paste",
+  "commands.modlist.exported": "Modlist saved to modlist-export.html",
+  "commands.modlist.failed": "Could not export modlist",
+  "commands.modlist.pastefail": "Could not upload to hastebin. Please check your log",
+  "commands.modlist.pasted": "Your modlist has been exported to https://hastebin.com/${url}"
+
+}
